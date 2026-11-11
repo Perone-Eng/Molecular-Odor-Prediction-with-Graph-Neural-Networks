@@ -1,0 +1,2 @@
+# Molecular-Odor-Prediction-with-Graph-Neural-Networks
+*Can a computer smell? This project might answer this question by using machine learning to predict how a molecule smells from its chemical structure alone. The project aimed to implement Graph Neural Networks (GCN, MPNN, GATv2) for multi-label classification across 138 odor descriptors, reaching AUROC 0.90 and surpassing published benchmarks.
