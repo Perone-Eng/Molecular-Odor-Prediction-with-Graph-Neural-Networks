@@ -1,0 +1,26 @@
+# Verified against the imports actually used in the notebooks.
+# Versions reflect the Google Colab environment the project was developed in.
+
+# Core scientific stack
+numpy>=1.26
+pandas>=2.2
+
+# Cheminformatics
+rdkit>=2024.3.1              # Chem.MolFromSmiles / Draw.MolToImage (molecule visualization)
+
+# Deep learning
+torch>=2.3
+torch-geometric>=2.5         # from_smiles, to_networkx, GCNConv, GATv2Conv, global_*_pool, DataLoader
+
+# Graphs
+networkx>=3.3                # to_networkx + nx.draw for graph visualization
+
+# Machine learning / metrics
+scikit-learn>=1.5            # hamming_loss, f1/precision/recall, roc_curve, auc, average_precision_score
+scikit-multilearn==0.2.0     # skmultilearn.model_selection.IterativeStratification (order=2)
+
+# Visualization
+matplotlib>=3.9
+
+# Utilities
+tqdm>=4.66                   # progress bar in get_unique_atoms
