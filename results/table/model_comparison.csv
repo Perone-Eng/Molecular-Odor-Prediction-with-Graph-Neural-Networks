@@ -1,0 +1,9 @@
+model,setting,auroc,precision,recall,f1_score,source
+GCN,Paper benchmark,0.8900,0.3790,0.3870,0.3620,Sanchez-Lengeling et al. 2019
+GCN,Naive replication,0.8464,0.1008,0.8109,0.1793,This work
+GCN,Stratification + per-label thresholds,0.8561,0.2616,0.5158,0.3471,This work
+MPNN,Paper benchmark,0.8940,0.3790,0.3900,0.3600,Sanchez-Lengeling et al. 2019
+MPNN,Naive replication,0.8642,0.1216,0.6023,0.2023,This work
+MPNN,Stratification + per-label thresholds,0.9001,0.3090,0.5270,0.3895,This work
+GATv2,Naive,0.8310,0.0713,0.7128,0.1296,This work
+GATv2,Stratification + per-label thresholds,0.8561,0.2436,0.5042,0.3284,This work
