@@ -66,7 +66,9 @@ O max pooling supera consistentemente o mean pooling — algo plausível em olfa
 
 ### Escopo deste repositório
 
-O projeto foi conduzido por uma equipe de três pessoas. Os notebooks publicados aqui cobrem a **ablação do GCN baseline**, o **GCN que aproxima a literatura** e a extensão **GATv2**. O **MPNN** foi implementado separadamente por outro integrante da equipe e seu notebook não está incluído; suas métricas aparecem acima e estão descritas no [relatório técnico](report/report.pdf) para fins de completude.
+O projeto foi conduzido por uma equipe de três pessoas. Os notebooks publicados aqui cobrem a **ablação do GCN baseline**, o **GCN que aproxima a literatura**, a extensão **GATv2** e o **MPNN**.
+
+Uma ressalva sobre procedência: o notebook do MPNN é uma **reimplementação escrita a partir da especificação arquitetural do relatório**, não o código de treinamento original, escrito por outro integrante da equipe. As métricas do MPNN na tabela acima vêm daquela execução original. Reexecutar o notebook produz valores na mesma faixa, sem reproduzi-los exatamente.
 
 ---
 
@@ -86,7 +88,7 @@ Combinação de duas fontes curadas por especialistas, amplamente utilizadas na 
 | Elementos químicos distintos | 25 |
 | Representação de entrada | SMILES → grafo molecular |
 
-Os notebooks baixam o conjunto de dados automaticamente — nenhuma configuração manual é necessária. Veja [`data/README.md`](data/README.md) para os detalhes.
+Os notebooks baixam o conjunto de dados automaticamente — nenhuma configuração manual é necessária. Veja [`data/README.md`](data/data_README.md) para os detalhes.
 
 ### O desafio central: inflação de zeros
 
@@ -120,7 +122,7 @@ Cada string SMILES é convertida em grafo topológico com `from_smiles` do PyTor
 
 **GATv2** *(nossa extensão além da literatura)* — duas camadas `GATv2Conv`: a primeira com 4 cabeças de atenção (dimensão oculta 64), saídas concatenadas, ELU e dropout de 0,3; a segunda com cabeça única. Pooling médio global e, em seguida, camada linear final. O GATv2 corrige a limitação de atenção estática do GAT original aplicando a transformação linear *depois* de concatenar as features dos nós de origem e destino, permitindo ranqueamento de atenção totalmente dinâmico — relevante para grafos moleculares em que certos grupos funcionais pesam de forma desproporcional.
 
-**MPNN** *(não incluído neste repositório — veja Escopo acima)* — a arquitetura descrita por Sanchez-Lengeling et al.: 5 camadas de passagem de mensagens, dimensão oculta 43, mensagens por multiplicação matricial condicionada às arestas, função de atualização GRU, pooling global por soma com readout softmax de 197 dimensões e conexões residuais, seguido de uma rede totalmente conectada de 3 camadas (392 unidades, ReLU, batch norm, dropout de 0,12).
+**MPNN** — a arquitetura descrita por Sanchez-Lengeling et al.: 5 passos de passagem de mensagens, dimensão oculta 43, mensagens por multiplicação matricial condicionada às arestas (`NNConv`), função de atualização GRU, readout por soma com portão de 197 dimensões e caminho residual, seguido de uma rede totalmente conectada de 3 camadas (392 unidades, ReLU, batch norm, dropout de 0,12). É o **único modelo aqui que consome as features das ligações** e o único cujos estados dos nós carregam memória entre os passos de mensagem — duas razões plausíveis para superar as outras duas arquiteturas sobre os mesmos dados. *(Veja a nota de procedência em Escopo.)*
 
 ### 3. Treinamento
 
@@ -145,16 +147,17 @@ Os thresholds resultantes são, em si, interpretáveis — o modelo estabelece u
 .
 ├── notebooks/
 │   ├── 01_gcn_implementation.ipynb    # Pré-processamento, ablação do GCN, GCN da literatura
-│   └── 02_gatv2.ipynb                 # Extensão baseada em atenção
+│   ├── 02_gatv2.ipynb                 # Extensão baseada em atenção
+│   └── 03_mpnn.ipynb                  # Passagem de mensagens condicionada às arestas
 ├── data/
 │   └── README.md                      # Descrição e origem do conjunto de dados
 ├── results/
 │   ├── figures/                       # Curvas de loss, curvas ROC/PR, AUC por classe
 │   └── tables/                        # Métricas em CSV
 ├── report/
-│   └── report.pdf                     # Relatório técnico completo
+│   └── Project_Report.pdf             # Relatório técnico completo
 ├── references/
-│   └── README.md                      # Artigos replicados e citados
+│   └── references_README.md           # Artigos replicados e citados
 ├── requirements.txt
 ├── .gitignore
 └── LICENSE
@@ -183,7 +186,7 @@ O conjunto de dados é baixado pelas primeiras células, então os notebooks rod
 - **Nenhum baseline clássico próprio.** As comparações com Random Forest e XGBoost são citadas da literatura, mas não reproduzidas aqui. Rodar XGBoost sobre fingerprints de Morgan seria barato e tornaria autossuficiente o argumento de que as GNNs valem a pena.
 - **Um único conjunto de dados.** Todos os resultados vêm da combinação GoodScents + Leffingwell. A generalização para amostras químicas independentes não foi testada; validar o pipeline em um novo conjunto de dados é o próximo passo imediato.
 - **Lacuna de precisão.** O MPNN otimizado troca precisão por recall em relação ao modelo publicado. Métodos de calibração além da varredura de thresholds (temperature scaling, focal loss) poderiam reequilibrar isso.
-- **Features de aresta não utilizadas.** O featurizer produz features no nível das ligações que os modelos GCN e GATv2 descartam. Convoluções condicionadas às arestas as aproveitariam.
+- **Features de aresta não utilizadas em dois dos três modelos.** O featurizer produz features no nível das ligações que os modelos GCN e GATv2 descartam; só o MPNN as aproveita. Acrescentar convoluções condicionadas às arestas às outras arquiteturas isolaria quanto da vantagem do MPNN vem apenas dessa informação.
 - **Overfitting nos modelos de atenção.** A loss de validação do GATv2 sobe após as primeiras épocas; regularização mais forte ou mais camadas de atenção merecem exploração.
 - **Descritores raros.** A AUROC por classe cai abaixo de 0,5 para os rótulos mais raros. Um esquema hierárquico de rótulos, ou o agrupamento dos descritores em categorias mais amplas como em Achebouche et al. (2022), pode ajudar.
 - **Integração multimodal.** Combinar em ensemble os embeddings de grafo com descritores físico-químicos ou embeddings de CNN de imagens moleculares 2D, na linha de Sharma et al. (2021), é uma direção promissora.
@@ -197,7 +200,7 @@ O conjunto de dados é baixado pelas primeiras células, então os notebooks rod
 3. Sharma, A. et al. (2021). *SMILES to smell: decoding the structure–odor relationship of chemical compounds using the deep neural network approach.* Journal of Chemical Information and Modeling, 61(2), 676–688.
 4. Suh, J., Hong, Y., & Park, C. (2025). *A comparative study of machine learning models on molecular fingerprints for odor decoding.* Communications Chemistry, 8(1), 278.
 
-Detalhes completos em [`references/README.md`](references/references_README.md).
+Detalhes completos em [`references/references_README.md`](references/references_README.md).
 
 ---
 
