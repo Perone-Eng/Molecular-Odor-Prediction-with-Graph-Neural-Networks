@@ -88,7 +88,7 @@ A combination of two expert-curated sources widely used in the flavor and fragra
 | Distinct chemical elements | 25 |
 | Input representation | SMILES → molecular graph |
 
-The notebooks download the dataset automatically — no manual setup required. See [`data/README.md`](data/README.md) for details.
+The notebooks download the dataset automatically — no manual setup required. See [`data/README.md`](data/data_README.md) for details.
 
 ### The core challenge: zero-inflation
 
