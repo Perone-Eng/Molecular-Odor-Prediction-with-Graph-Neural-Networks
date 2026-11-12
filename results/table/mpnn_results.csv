@@ -1,0 +1,4 @@
+model,setting,auroc,precision,recall,f1_score,source
+MPNN,Paper benchmark,0.8940,0.3790,0.3900,0.3600,Sanchez-Lengeling et al. 2019
+MPNN,Naive replication,0.8642,0.1216,0.6023,0.2023,Project report Table 2
+MPNN,Stratification + per-label thresholds,0.9001,0.3090,0.5270,0.3895,Project report Table 2
