@@ -1,3 +1,5 @@
+**English** · [Français](README.fr.md) · [Português](README.pt-BR.md)
+
 # Molecular Odor Prediction with Graph Neural Networks
 
 **Multi-label prediction of 138 odor descriptors directly from molecular SMILES, replicating and surpassing published benchmarks.**
@@ -64,7 +66,9 @@ Max pooling consistently beats mean pooling — plausible in olfaction, where a 
 
 ### Scope of this repository
 
-The project was carried out by a team of three. The notebooks published here cover the **baseline GCN ablation**, the **literature-approximated GCN** and the **GATv2** extension. The **MPNN** was implemented separately by another team member and its notebook is not included; its metrics are reported above and described in the [technical report](report/report.pdf) for completeness.
+The project was carried out by a team of three. The notebooks published here cover the **baseline GCN ablation**, the **literature-approximated GCN**, the **GATv2** extension and the **MPNN**.
+
+One caveat on provenance: the MPNN notebook is a **re-implementation written from the architectural specification in the report**, not the original training code, which was written by another team member. The MPNN metrics in the table above come from that original run. Re-running the notebook lands in the same range without reproducing those numbers exactly.
 
 ---
 
@@ -118,7 +122,7 @@ Each SMILES string is converted into a topological graph with PyTorch Geometric'
 
 **GATv2** *(our extension beyond the literature)* — two `GATv2Conv` layers: the first with 4 attention heads (hidden dim 64), concatenated outputs, ELU and dropout 0.3; the second single-head. Global mean pooling, then a linear head. GATv2 fixes the static-attention limitation of the original GAT by applying the linear transform *after* concatenating source and target features, allowing fully dynamic attention ranking — relevant for molecular graphs where some functional groups matter disproportionately.
 
-**MPNN** *(not included in this repository — see Scope above)* — the architecture reported by Sanchez-Lengeling et al.: 5 message-passing layers, hidden dim 43, edge-conditioned matrix-multiplication messages, GRU update function, global sum pooling with a 197-dim softmax readout and residual connections, then a 3-layer fully connected net (392 units, ReLU, batch norm, dropout 0.12).
+**MPNN** — the architecture reported by Sanchez-Lengeling et al.: 5 message-passing steps, hidden dim 43, edge-conditioned matrix-multiplication messages (`NNConv`), GRU update function, gated sum readout of 197 dimensions with a residual path, then a 3-layer fully connected net (392 units, ReLU, batch norm, dropout 0.12). This is the **only model here that consumes the bond features**, and the only one whose node states carry memory across message-passing steps — both plausible reasons it outperforms the other two architectures on the same data. *(See the provenance note under Scope.)*
 
 ### 3. Training
 
@@ -143,16 +147,17 @@ The resulting thresholds are themselves interpretable — the model sets a stric
 .
 ├── notebooks/
 │   ├── 01_gcn_implementation.ipynb    # Preprocessing, baseline GCN ablation, literature GCN
-│   └── 02_gatv2.ipynb                 # Attention-based extension
+│   ├── 02_gatv2.ipynb                 # Attention-based extension
+│   └── 03_mpnn.ipynb                  # Edge-conditioned message passing
 ├── data/
 │   └── README.md                      # Dataset description and source
 ├── results/
 │   ├── figures/                       # Loss curves, ROC/PR curves, per-class AUC
 │   └── tables/                        # Metrics as CSV
 ├── report/
-│   └── report.pdf                     # Full technical report
+│   └── Project_Report.pdf             # Full technical report
 ├── references/
-│   └── README.md                      # Papers replicated and cited
+│   └── references_README.md           # Papers replicated and cited
 ├── requirements.txt
 ├── .gitignore
 └── LICENSE
@@ -181,7 +186,7 @@ The dataset is downloaded by the first cells, so the notebooks run top to bottom
 - **No classical baseline of our own.** Random Forest / XGBoost comparisons are cited from the literature but not reproduced here. Running XGBoost on Morgan fingerprints would be cheap and would make the "GNNs are worth it" argument self-contained.
 - **Single dataset.** All results come from the GoodScents + Leffingwell combination. Generalization to independent chemical samples is untested; validating the pipeline on a new dataset is the immediate next step.
 - **Precision gap.** The optimized MPNN trades precision for recall relative to the published model. Calibration methods beyond threshold sweeping (e.g. temperature scaling, focal loss) could rebalance this.
-- **Edge features unused.** The featurizer produces bond-level features that the GCN and GATv2 models discard. Edge-conditioned convolutions would exploit them.
+- **Edge features unused in two of three models.** The featurizer produces bond-level features that the GCN and GATv2 models discard; only the MPNN consumes them. Adding edge-conditioned convolutions to the other architectures would isolate how much of the MPNN's advantage comes from the bond information alone.
 - **Overfitting in attention models.** GATv2 validation loss rises after the initial epochs; stronger regularization or more attention layers deserve exploration.
 - **Rare descriptors.** Per-class AUROC falls below 0.5 for the rarest labels. A hierarchical label scheme, or grouping descriptors into broader categories as in Achebouche et al. (2022), might help.
 - **Multimodal integration.** Ensembling graph embeddings with physicochemical descriptors or CNN embeddings of 2D molecular images, following Sharma et al. (2021), is a promising direction.
