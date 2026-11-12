@@ -66,7 +66,9 @@ Le max pooling surpasse systématiquement le mean pooling — ce qui est plausib
 
 ### Périmètre de ce dépôt
 
-Le projet a été mené par une équipe de trois personnes. Les notebooks publiés ici couvrent l'**ablation du GCN de référence**, le **GCN approximant la littérature** et l'extension **GATv2**. Le **MPNN** a été implémenté séparément par un autre membre de l'équipe et son notebook n'est pas inclus ; ses métriques figurent ci-dessus et sont décrites dans le [rapport technique](report/report.pdf) par souci d'exhaustivité.
+Le projet a été mené par une équipe de trois personnes. Les notebooks publiés ici couvrent l'**ablation du GCN de référence**, le **GCN approximant la littérature**, l'extension **GATv2** et le **MPNN**.
+
+Une réserve sur la provenance : le notebook MPNN est une **réimplémentation écrite à partir de la spécification architecturale du rapport**, et non le code d'entraînement d'origine, rédigé par un autre membre de l'équipe. Les métriques MPNN du tableau ci-dessus proviennent de cette exécution d'origine. Réexécuter le notebook donne des valeurs du même ordre, sans les reproduire exactement.
 
 ---
 
@@ -86,7 +88,7 @@ Combinaison de deux sources expertes largement utilisées dans l'industrie des a
 | Éléments chimiques distincts | 25 |
 | Représentation d'entrée | SMILES → graphe moléculaire |
 
-Les notebooks téléchargent le jeu de données automatiquement — aucune configuration manuelle n'est requise. Voir [`data/README.md`](data/README.md) pour le détail.
+Les notebooks téléchargent le jeu de données automatiquement — aucune configuration manuelle n'est requise. Voir [`data/README.md`](data/data_README.md) pour le détail.
 
 ### Le défi central : l'inflation de zéros
 
@@ -120,7 +122,7 @@ Chaque chaîne SMILES est convertie en graphe topologique via `from_smiles` de P
 
 **GATv2** *(notre extension au-delà de la littérature)* — deux couches `GATv2Conv` : la première avec 4 têtes d'attention (dimension cachée 64), sorties concaténées, ELU et dropout de 0,3 ; la seconde à tête unique. Pooling moyen global, puis couche linéaire finale. GATv2 corrige la limitation d'attention statique du GAT original en appliquant la transformation linéaire *après* concaténation des caractéristiques des nœuds source et cible, permettant un classement d'attention pleinement dynamique — pertinent pour des graphes moléculaires où certains groupes fonctionnels pèsent de façon disproportionnée.
 
-**MPNN** *(non inclus dans ce dépôt — voir Périmètre ci-dessus)* — l'architecture décrite par Sanchez-Lengeling et al. : 5 couches de passage de messages, dimension cachée 43, messages par multiplication matricielle conditionnée aux arêtes, fonction de mise à jour GRU, pooling global par somme avec readout softmax de 197 dimensions et connexions résiduelles, puis un réseau entièrement connecté à 3 couches (392 unités, ReLU, batch norm, dropout de 0,12).
+**MPNN** — l'architecture décrite par Sanchez-Lengeling et al. : 5 étapes de passage de messages, dimension cachée 43, messages par multiplication matricielle conditionnée aux arêtes (`NNConv`), fonction de mise à jour GRU, readout par somme pondérée de 197 dimensions avec chemin résiduel, puis un réseau entièrement connecté à 3 couches (392 unités, ReLU, batch norm, dropout de 0,12). C'est le **seul modèle ici qui exploite les caractéristiques des liaisons**, et le seul dont les états de nœuds conservent une mémoire entre les étapes de passage de messages — deux raisons plausibles de sa supériorité sur les deux autres architectures, à données égales. *(Voir la note de provenance sous Périmètre.)*
 
 ### 3. Entraînement
 
@@ -145,16 +147,17 @@ Les seuils obtenus sont eux-mêmes interprétables : le modèle fixe une barre s
 .
 ├── notebooks/
 │   ├── 01_gcn_implementation.ipynb    # Prétraitement, ablation GCN, GCN de la littérature
-│   └── 02_gatv2.ipynb                 # Extension fondée sur l'attention
+│   ├── 02_gatv2.ipynb                 # Extension fondée sur l'attention
+│   └── 03_mpnn.ipynb                  # Passage de messages conditionné aux arêtes
 ├── data/
 │   └── README.md                      # Description et source du jeu de données
 ├── results/
 │   ├── figures/                       # Courbes de perte, courbes ROC/PR, AUC par classe
 │   └── tables/                        # Métriques au format CSV
 ├── report/
-│   └── report.pdf                     # Rapport technique complet
+│   └── Project_Report.pdf             # Rapport technique complet
 ├── references/
-│   └── README.md                      # Articles répliqués et cités
+│   └── references_README.md           # Articles répliqués et cités
 ├── requirements.txt
 ├── .gitignore
 └── LICENSE
@@ -183,7 +186,7 @@ Le jeu de données est téléchargé par les premières cellules : les notebooks
 - **Aucune référence classique produite par nous.** Les comparaisons Random Forest / XGBoost sont citées depuis la littérature mais non reproduites ici. Exécuter XGBoost sur des empreintes de Morgan serait peu coûteux et rendrait l'argument « les GNN en valent la peine » autoportant.
 - **Un seul jeu de données.** Tous les résultats proviennent de la combinaison GoodScents + Leffingwell. La généralisation à des échantillons chimiques indépendants n'est pas testée ; valider le pipeline sur un nouveau jeu de données est l'étape immédiate.
 - **Écart de précision.** Le MPNN optimisé échange de la précision contre du rappel par rapport au modèle publié. Des méthodes de calibration au-delà du balayage de seuils (temperature scaling, focal loss) pourraient rééquilibrer ce compromis.
-- **Caractéristiques des arêtes inutilisées.** Le featurizer produit des caractéristiques au niveau des liaisons que les modèles GCN et GATv2 ignorent. Des convolutions conditionnées aux arêtes les exploiteraient.
+- **Caractéristiques des arêtes inutilisées dans deux modèles sur trois.** Le featurizer produit des caractéristiques au niveau des liaisons que les modèles GCN et GATv2 ignorent ; seul le MPNN les exploite. Ajouter des convolutions conditionnées aux arêtes aux autres architectures permettrait d'isoler la part de l'avantage du MPNN qui provient de cette seule information.
 - **Surapprentissage des modèles d'attention.** La perte de validation du GATv2 remonte après les premières époques ; une régularisation plus forte ou davantage de couches d'attention méritent d'être explorées.
 - **Descripteurs rares.** L'AUROC par classe descend sous 0,5 pour les labels les plus rares. Un schéma de labels hiérarchique, ou un regroupement des descripteurs en catégories plus larges comme chez Achebouche et al. (2022), pourrait aider.
 - **Intégration multimodale.** Combiner en ensemble les plongements de graphes avec des descripteurs physico-chimiques ou des plongements CNN d'images moléculaires 2D, dans la lignée de Sharma et al. (2021), constitue une piste prometteuse.
