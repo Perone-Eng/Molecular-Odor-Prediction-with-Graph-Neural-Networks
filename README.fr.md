@@ -1,4 +1,4 @@
-[English](README.md) · **Français** · [Português](README.pt-BR.md)
+[English](README.md) · **Français** · [Português](README.pt.md)
 
 # Prédiction des odeurs moléculaires par réseaux de neurones sur graphes
 
