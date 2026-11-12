@@ -197,7 +197,7 @@ O conjunto de dados é baixado pelas primeiras células, então os notebooks rod
 3. Sharma, A. et al. (2021). *SMILES to smell: decoding the structure–odor relationship of chemical compounds using the deep neural network approach.* Journal of Chemical Information and Modeling, 61(2), 676–688.
 4. Suh, J., Hong, Y., & Park, C. (2025). *A comparative study of machine learning models on molecular fingerprints for odor decoding.* Communications Chemistry, 8(1), 278.
 
-Detalhes completos em [`references/README.md`](references/README.md).
+Detalhes completos em [`references/README.md`](references/references_README.md).
 
 ---
 
@@ -207,7 +207,7 @@ Felipe Perone · Vinícius Baião · Paulo Warken
 
 Orientador: Prof. Guillaume Renton — ENSEA
 
-📄 [Relatório técnico completo](report/report.pdf)
+📄 [Relatório técnico completo](report/Project_Report.pdf)
 
 ---
 
