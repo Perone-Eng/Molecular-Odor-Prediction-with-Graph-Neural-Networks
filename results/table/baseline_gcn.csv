@@ -1,0 +1,7 @@
+readout,num_layers,hamming_loss,micro_f1,subset_accuracy
+global_mean_pool,2,0.1907,0.1291,0.0000
+global_mean_pool,3,0.1815,0.1436,0.0421
+global_mean_pool,4,0.1080,0.1954,0.0641
+global_max_pool,2,0.1616,0.1600,0.0401
+global_max_pool,3,0.1023,0.1915,0.0561
+global_max_pool,4,0.0784,0.2259,0.0641
