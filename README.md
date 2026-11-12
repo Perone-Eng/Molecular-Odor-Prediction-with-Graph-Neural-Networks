@@ -1,4 +1,4 @@
-**English** · [Français](README.fr.md) · [Português](README.pt-BR.md)
+**English** · [Français](README.fr.md) · [Português](README.pt.md)
 
 # Molecular Odor Prediction with Graph Neural Networks
 
